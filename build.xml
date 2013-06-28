@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- ////////////////////////////////////////////////////////////////////// -->
+<!-- Copyright (c) 2002 by Naohide Sano, All rights reserved.               -->
+<!--                                                                        -->
+<!-- Written by Naohide Sano                                                -->
+<!--                                                                        -->
+<!-- XPath                                                                  -->
+<!--                                                                        -->
+<!-- @author	Naohide Sano                                                -->
+<!-- @version	0.00	021110	nsano	initial version                     -->
+<!--                                                                        -->
+<!-- ////////////////////////////////////////////////////////////////////// -->
+
+<project default="run" basedir=".">
+
+<!-- プロパティの定義 -->
+
+<!-- クラスパスの定義 -->
+<path id="project.class.path">
+  <pathelement location="." />
+  <fileset dir="lib">
+    <include name="*.jar" />
+  </fileset>
+  <pathelement location="${ant.home}/lib/xercesImpl.jar" />
+  <pathelement location="${ant.home}/lib/xml-apis.jar" />
+  <pathelement location="${ant.home}/lib/xalan-2.3.1.jar" />
+<!--
+-->
+</path>
+
+<!-- ターゲットの定義 -->
+
+<!-- clean -->
+<target name="clean" description="ビルド環境のクリア">
+  <delete>
+   <fileset dir=".">
+    <include name="*.class" />
+   </fileset>
+  </delete>
+</target>
+
+<!-- javac -->
+<target name="compile" depends="" description="コンパイル">
+  <javac debug="on">
+    <classpath refid="project.class.path" />
+    <include name="*.java" />
+    <src path="." />
+  </javac>
+</target>
+
+<!-- jar -->
+<target name="packaging" depends="compile" description="パッケージング">
+  <jar destfile="xed.jar">
+    <fileset dir=".">
+      <include name="**/*.class" />
+    </fileset>
+  </jar>
+</target>
+
+<!-- run -->
+<target name="run" depends="compile" description="プログラムの実行">
+  <java classname="xed" fork="yes">
+    <classpath refid="project.class.path" />
+    <arg value="id.xed" />
+    <arg value="xdoclet.tld" />
+    <arg value="out.tld" />
+  </java>
+</target>
+
+</project>
+
+<!-- -->
