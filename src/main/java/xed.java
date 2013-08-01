@@ -1,176 +1,400 @@
 /*
- * Copyright (c) 2002 by Naohide Sano, All Rights Reserved.
+ * Copyright (c) 2013 by Naohide Sano, All Rights Reserved.
  *
  * Programmed by Naohide Sano
  */
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Iterator;
+import java.io.File;
+import java.io.PrintWriter;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
-import java.util.Properties;
+import java.util.Locale;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.dom.DOMSource;
-import javax.xml.transform.stream.StreamResult;
+import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
-import org.jaxen.JaxenException;
-import org.jaxen.XPath;
-import org.jaxen.dom.DOMXPath;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
+import org.w3c.dom.NodeList;
+
+import org.klab.commons.cli.Argument;
+import org.klab.commons.cli.Binded;
+import org.klab.commons.cli.Binder;
+import org.klab.commons.cli.Option;
+import org.klab.commons.cli.Options;
+
+import vavi.xml.util.PrettyPrinter;
 
 
 /**
  * Command line XML editor.
  * 
- * @author <a href="mailto:vavivavi@yahoo.co.jp">Naohide Sano</a> (vavi)
- * @version 0.00 021110 vavi initial version <br>
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
+ * @version 0.00 2013/07/30 umjammer initial version <br>
  */
+@Options
 public class xed {
 
-    /**
-     * xed script in out.
-     */
-    public static void main(String[] args) throws Exception {
-        if (args.length != 3) {
-            System.err.println("usage: java xed script in out");
-            System.exit(1);
-        }
-
-        new xed(args[0], args[1], args[2]);
-    }
-
-    /**
-     * 
-     */
-    private xed(String scriptFile, String inFile, String outFile)
-        throws JaxenException,
-               SAXException,
-               IOException,
-               TransformerException {
-
-        // XML 文書から DOM を取得
-        // System.err.println(parser.isValidating());
-        InputSource input = new InputSource(new BufferedReader(new FileReader(inFile)));
-
-        Document document = parser.parse(input);
-// System.err.println("---- encoding ----");
-// System.err.println(input.getEncoding());
-
-        String publicId = document.getDoctype().getPublicId();
-System.err.println("---- public id ----");
-System.err.println(publicId);
-
-        String systemId = document.getDoctype().getSystemId();
-System.err.println("---- system id ----");
-System.err.println(systemId);
-
-// System.err.println(document.getDoctype().getName());
-// System.err.println(document.getDoctype().getInternalSubset());
-
-//         NamedNodeMap es = document.getDoctype().getEntities();
-//         for (int i = 0; i < es.getLength(); i++) {
-// System.err.println(es.item(i));
-//         }
-
-//         NamedNodeMap ns = document.getDoctype().getNotations();
-//         for (int i = 0; i < ns.getLength(); i++) {
-// System.err.println(ns.item(i));
-//         }
-
-//         String encoding = document.getDoctype().getEntities().getNamedItem(OutputKeys.ENCODING).getNodeValue();
-// System.err.println("---- encoding ----");
-// System.err.println(encoding);
-
-        // script
-        Document scriptDocument = parser.parse(scriptFile);
-System.err.println("---- document node ----");
-System.err.println(document.getDocumentElement());
-
-        XPath commandPath = new DOMXPath("/xed/*");
-        List<?> commands = commandPath.selectNodes(scriptDocument);
-        Iterator<?> i = commands.iterator();
-        while (i.hasNext()) {
-            Node commandNode = (Node) i.next();
-System.err.println("---- command node ----");
-System.err.println(commandNode);
-            String command = commandNode.getNodeName();
-System.err.println("---- command ----");
-System.err.println(command);
-            String xpath = commandNode.getAttributes().getNamedItem("path").getNodeValue();
-System.err.println("---- xpath ----");
-System.err.println(xpath);
-
-            if ("add".equals(command)) {
-                XPath importPath = new DOMXPath("*");
-                Node importNode = (Node) importPath.selectNodes(commandNode).get(0);
-System.err.println("---- import node ----");
-System.err.println(importNode);
-                Node addNode = document.importNode(importNode, true);
-
-                XPath selectPath = new DOMXPath(xpath);
-                List<?> results = selectPath.selectNodes(document);
-                Iterator<?> j = results.iterator();
-                while (j.hasNext()) {
-                    Node result = (Node) j.next();
-// System.err.println(result);
-                    result.appendChild(addNode);
+    /** */
+    private static class Sorter {
+        enum Type {
+            datetime {
+                int compareTo(String o1, String o2, Sorter sorter) {
+                    try {
+                        DateFormat sdf = new SimpleDateFormat(sorter.option, Locale.ENGLISH); // "http://d.hatena.ne.jp/rudi/20101201/1291214680" TODO locale
+                        Date d1 = sdf.parse(o1);
+                        Date d2 = sdf.parse(o2);
+                        return sorter.ascend ? d1.compareTo(d2) : d2.compareTo(d1);
+                    } catch (ParseException e) {
+                        throw new IllegalArgumentException(e);
+                    }
                 }
-System.err.println("---- result node ----");
-System.err.println(results);
-            } else if ("delete".equals(command)) {
-            } else if ("replace".equals(command)) {
-            } else {
-System.err.println("unknown command: " + command);
-            }
+            },
+            string {
+                int compareTo(String o1, String o2, Sorter sorter) {
+                    return sorter.ascend ? o1.compareTo(o2) : o2.compareTo(o1);
+                }
+            };
+            abstract int compareTo(String o1, String o2, Sorter sorter);
         }
-
-        Writer writer = new BufferedWriter(new FileWriter(outFile));
-
-        DOMSource source = new DOMSource(document);
-        StreamResult result = new StreamResult(writer);
-        // set encode
-        Properties props = new Properties();
-//      props.setProperty(OutputKeys.INDENT, "yes");
-        props.setProperty(OutputKeys.DOCTYPE_SYSTEM, systemId);
-        props.setProperty(OutputKeys.DOCTYPE_PUBLIC, publicId);
-        props.setProperty(OutputKeys.ENCODING, "Shift_JIS");
-        transformer.setOutputProperties(props);
-
-        transformer.transform(source, result);
+        /** xpath for sorting nodes */
+        String targetXPath;
+        /** xpath for sort key text */
+        String keyXPath;
+        /** "asc" | "desc" */
+        boolean ascend;
+        /** datetime | string */
+        Type type;
+        /** datetime: date time format @see {@link java.util.DateFormat} */
+        String option;
+        public String toString() {
+            return "targetXPath: " + targetXPath +
+                    ", keyXPath: " + keyXPath +
+                    ", ascend: " + ascend +
+                    ", type: " + type +
+                    ", option: " + option;
+        }
     }
 
     /** */
-    private Transformer transformer;
+    @Option(option = "s", argName = "sorter target_xpath key_xpath [asc|desc] [datetime|string] [option]", args = 5)
+    @Binded(binder = SorterBinder.class)
+    private Sorter sorter;
+    
+    /** */
+    public static class SorterBinder implements Binder<xed> {
+        public void bind(xed bean, String[] args, Context context) {
+            bean.sorter = new Sorter();
+            bean.sorter.targetXPath = args[0];
+            bean.sorter.keyXPath = args[1];
+            bean.sorter.ascend = args.length > 2 ? args[2].equals("desc") ? false : true : true;
+            bean.sorter.type = args.length > 3 ? args[3].equals("datetime") ? Sorter.Type.datetime : Sorter.Type.string : Sorter.Type.string;
+            bean.sorter.option = args.length > 4 ? args[4] : null;
+        }
+    }
 
     /** */
-    private DocumentBuilder parser;
+    private static class Editor {
+        /** xpath for editing nodes */
+        String targetXPath;
+        /** xpath for editing node */
+        String sourceXPath;
+        /** edit expression (xpath|xpath_sdf|$$) */
+        String destinationExpression;
+        public String toString() {
+            return "targetXPath: " + targetXPath +
+                    ", sourceXPath: " + sourceXPath +
+                    ", destinationExpression: " + destinationExpression;
+        }
+    }
 
     /** */
+    @Option(option = "e", argName = "editor target_xpath source_xpath dest_expression", args = 3)
+    @Binded(binder = EditorBinder.class)
+    private Editor editor;
+
+    /** */
+    public static class EditorBinder implements Binder<xed> {
+        public void bind(xed bean, String[] args, Context context) {
+            bean.editor = new Editor();
+            bean.editor.targetXPath = args[0];
+            bean.editor.sourceXPath = args[1];
+            bean.editor.destinationExpression = args[2];
+        }
+    }
+
+    /** */
+    @Argument(index = 0)
+    private File inFile;
+
+    /** */
+    private XPath xPath = XPathFactory.newInstance().newXPath();
+
+    /** */
+    private DocumentBuilder db;
+    
+    /* */
     {
         try {
             DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            // xerces depend code: to avoid network access.
-//          dbf.setAttribute("http://apache.org/xml/features/nonvalidating/load-external-dtd", Boolean.FALSE);
-            parser = dbf.newDocumentBuilder();
-            TransformerFactory tf = TransformerFactory.newInstance();
-            transformer = tf.newTransformer();
-        } catch (Exception e) {
-e.printStackTrace(System.err);
-            System.exit(1);
+            db = dbf.newDocumentBuilder();
+        } catch (ParserConfigurationException e) {
+            throw new IllegalStateException(e);
         }
+    }
+
+    /**
+     * sort targetXPath keyXPath [asc|desc] [datetime|string] [option]
+     * <pre>
+     * sort "/foo/bar/buz" "/foo/bar/buz/key/text()" asc
+     * </pre>
+     * before
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *     &lt;buz&gt;&lt;key&gt;3&lt;/key&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt; 
+     *     &lt;buz&gt;&lt;key&gt;1&lt;/key&gt;&lt;/buz&gt; &lt;!-- buz 中に含まれる要素 key の値でソートする --&gt;
+     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;key&gt;4&lt;/key&gt;&lt;/buz&gt;
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     * </pre>
+     * after
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *     &lt;buz&gt;&lt;key&gt;1&lt;/key&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;key&gt;3&lt;/key&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;key&gt;4&lt;/key&gt;&lt;/buz&gt;
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     * </pre>
+     * 
+     * @param document
+     */
+    void sort(Document document) {
+        try {
+            Object nodeSet = xPath.evaluate(sorter.targetXPath, document, XPathConstants.NODESET);
+
+            NodeList nodeList = NodeList.class.cast(nodeSet);
+//System.err.println("nodeList: " + nodeList.getLength());
+
+            SortedMap<String, Node> nodes = new TreeMap<String, Node>(new Comparator<String>() {
+                public int compare(String o1, String o2) {
+                    return sorter.type.compareTo(o1, o2, sorter);
+                }
+            });
+
+            Node parent = null;
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+    
+                Node node = nodeList.item(i);
+                if (parent == null) {
+                    parent = node.getParentNode();
+                }
+
+                String key = (String) xPath.evaluate(sorter.keyXPath, node, XPathConstants.STRING); // removeChild してるからうまく行ってる
+
+                nodes.put(key, node);
+
+                parent.removeChild(node);
+            }
+
+            for (Node node : nodes.values()) {
+                parent.appendChild(node);
+            }
+            
+        } catch (XPathExpressionException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+    
+    /**
+     * edit targetXPath sourceXPath destinationExpression
+     * <p>
+     * functions
+     * <ul>
+     *  <li>xpath: xpath reference</li>
+     *  <li>xpath_sdf: xpath reference with simple date format</li>
+     * </ul>
+     * <li>$$: source reference</li>
+     * </p>
+     * <pre>
+     * edit "/foo/bar/buz" "/foo/bar/buz/target" "number is $$"
+     * </pre>
+     * before
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *     &lt;buz&gt;&lt;target&gt;3&lt;/target&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt; 
+     *     &lt;buz&gt;&lt;target&gt;1&lt;/target&gt;&lt;/buz&gt; &lt;!-- buz 中に含まれる要素 target のテキストを編集をする --&gt;
+     *     &lt;buz&gt;&lt;target&gt;2&lt;/target&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;target&gt;4&lt;/target&gt;&lt;/buz&gt; 
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     * </pre>
+     * after
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *     &lt;buz&gt;&lt;target&gt;number is 3&lt;/target&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;target&gt;number is 1&lt;/target&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;target&gt;number is 2&lt;/target&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;target&gt;number is 4&lt;/target&gt;&lt;/buz&gt; 
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     * </pre>
+     *
+     * @param document
+     */
+    void edit(Document document) {
+        try {
+            Object nodeSet = xPath.evaluate(editor.targetXPath, document, XPathConstants.NODESET);
+
+            NodeList nodeList = NodeList.class.cast(nodeSet);
+//System.err.println("nodeList: " + nodeList.getLength());
+
+            List<Node> nodes = new ArrayList<Node>();
+
+            Node parent = null;
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+    
+                // 1.
+
+                Node node = nodeList.item(i);
+                if (parent == null) {
+                    parent = node.getParentNode();
+                }
+
+                // 2.
+                
+                List<Node> sourceNodes = new ArrayList<Node>();
+                Node sourceNode = (Node) xPath.evaluate(editor.sourceXPath, node, XPathConstants.NODE);
+                // foursquare がアホな出力するから
+                for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
+                    Node childNode = sourceNode.getChildNodes().item(j);  
+//System.err.println("i:" + childNode);
+                    sourceNodes.add(childNode);
+                }
+                for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
+                    Node childNode = sourceNode.getChildNodes().item(j);  
+                    sourceNode.removeChild(childNode);
+                }
+
+                // 3. edit
+
+                String expression = editor.destinationExpression;
+    
+                // function 1
+                expression = process_xpath_sdf(expression, node);
+                // function 2
+                expression = process_xpath(expression, node);
+
+                // source
+                String[] parts = expression.split("\\$\\$", -1);
+//System.err.println("parts:" + parts.length);
+                if (parts.length > 1) {
+                    for (int j = 0; j < parts.length - 1; j++) {
+                        if (!parts[j].isEmpty()) {
+                            sourceNode.appendChild(document.createTextNode(parts[j]));
+                        }
+                        for (Node n : sourceNodes) {
+//System.err.println("o:" + n);
+                            sourceNode.appendChild(n);
+                        }
+                    }
+                }
+
+                // 4.
+                
+                nodes.add(node);
+
+                parent.removeChild(node);
+            }
+
+            for (Node node : nodes) {
+                parent.appendChild(node);
+            }
+
+        } catch (XPathExpressionException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    /** */
+    private String process_xpath(String expression, Node node) throws XPathExpressionException {
+        Pattern pattern = Pattern.compile("xpath\\s*\\(\\s*'([/@\\[\\]\\(\\)\\w]+)'\\s*\\)");
+        Matcher matcher = pattern.matcher(expression);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String xpath = matcher.group(1);
+//System.err.println("xpath: " + xpath);
+            String replacement = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
+//System.err.println("replacement: " + replacement);
+            matcher.appendReplacement(sb, replacement);
+        }
+        matcher.appendTail(sb);
+//System.err.println("expression: " + sb.toString());
+        return sb.toString();
+    }
+
+    /** */
+    private String process_xpath_sdf(String expression, Node node) throws XPathExpressionException {
+        Pattern pattern = Pattern.compile("xpath_sdf\\s*\\(\\s*'([/@\\[\\]\\(\\)\\w]+)'\\s*,\\s*'(.+)'\\s*,\\s*'(.+)'\\s*\\)");
+        Matcher matcher = pattern.matcher(expression);
+        StringBuffer sb = new StringBuffer();
+        while (matcher.find()) {
+            String xpath = matcher.group(1);
+            String format1 = matcher.group(2);
+            String format2 = matcher.group(3);
+            String datetime = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
+            String replacement;
+            try {
+                replacement = new SimpleDateFormat(format2).format(new SimpleDateFormat(format1, Locale.ENGLISH).parse(datetime)); // TODO formats locale
+            } catch (ParseException e) {
+System.err.println("parse error: " + format1);
+                replacement = datetime;
+            }
+            matcher.appendReplacement(sb, replacement);
+        }
+        matcher.appendTail(sb);
+//System.err.println("expression: " + sb.toString());
+        return sb.toString();
+    }
+
+    /**
+     * @param args
+     */
+    public static void main(String[] args) throws Exception {
+        xed app = new xed();
+        Options.Util.bind(args, app);
+        Document document = app.db.parse(app.inFile);
+        if (app.sorter != null) {
+//System.err.println(app.sorter);
+            app.sort(document);
+        }
+        if (app.editor != null) {
+//System.err.println(app.editor);
+            app.edit(document);
+        }
+        new PrettyPrinter(new PrintWriter(System.out)).print(document);
     }
 }
 
