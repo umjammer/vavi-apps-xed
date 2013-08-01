@@ -37,10 +37,14 @@
   		<optional>false</optional>
   	</dependency>
   	<dependency>
-  		<groupId>jaxen</groupId>
-  		<artifactId>jaxen</artifactId>
-  		<version>1.1.1</version>
-  		<optional>false</optional>
+  	  <groupId>saxon</groupId>
+  	  <artifactId>saxon</artifactId>
+  	  <version>9.2.1.2j</version>
+  	</dependency>
+  	<dependency>
+  	  <groupId>org.klab</groupId>
+  	  <artifactId>klab-commons-cli</artifactId>
+  	  <version>1.2.2</version>
   	</dependency>
   </dependencies>
 </project>
