@@ -16,9 +16,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
+import javax.script.Bindings;
+import javax.script.ScriptContext;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -113,7 +116,7 @@ public class xed {
         String targetXPath;
         /** xpath for editing node */
         String sourceXPath;
-        /** edit expression (xpath|xpath_sdf|$$) */
+        /** js expression, $$ in string replaced by child nodes of sourceXPath */
         String destinationExpression;
         public String toString() {
             return "targetXPath: " + targetXPath +
@@ -276,54 +279,15 @@ public class xed {
 
             for (int i = 0; i < nodeList.getLength(); i++) {
     
-                // 1.
-
                 Node node = nodeList.item(i);
                 if (parent == null) {
                     parent = node.getParentNode();
                 }
 
-                // 2.
-                
-                List<Node> sourceNodes = new ArrayList<Node>();
                 Node sourceNode = (Node) xPath.evaluate(editor.sourceXPath, node, XPathConstants.NODE);
-                // foursquare がアホな出力するから
-                for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
-                    Node childNode = sourceNode.getChildNodes().item(j);  
-//System.err.println("i:" + childNode);
-                    sourceNodes.add(childNode);
-                }
-                for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
-                    Node childNode = sourceNode.getChildNodes().item(j);  
-                    sourceNode.removeChild(childNode);
-                }
 
-                // 3. edit
+                process_script(editor.destinationExpression, node, sourceNode, document);
 
-                String expression = editor.destinationExpression;
-    
-                // function 1
-                expression = process_xpath_sdf(expression, node);
-                // function 2
-                expression = process_xpath(expression, node);
-
-                // source
-                String[] parts = expression.split("\\$\\$", -1);
-//System.err.println("parts:" + parts.length);
-                if (parts.length > 1) {
-                    for (int j = 0; j < parts.length - 1; j++) {
-                        if (!parts[j].isEmpty()) {
-                            sourceNode.appendChild(document.createTextNode(parts[j]));
-                        }
-                        for (Node n : sourceNodes) {
-//System.err.println("o:" + n);
-                            sourceNode.appendChild(n);
-                        }
-                    }
-                }
-
-                // 4.
-                
                 nodes.add(node);
 
                 parent.removeChild(node);
@@ -338,45 +302,76 @@ public class xed {
         }
     }
 
-    /** */
-    private String process_xpath(String expression, Node node) throws XPathExpressionException {
-        Pattern pattern = Pattern.compile("xpath\\s*\\(\\s*'([/@\\[\\]\\(\\)\\w]+)'\\s*\\)");
-        Matcher matcher = pattern.matcher(expression);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            String xpath = matcher.group(1);
-//System.err.println("xpath: " + xpath);
-            String replacement = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
-//System.err.println("replacement: " + replacement);
-            matcher.appendReplacement(sb, replacement);
+    /** replaces $$ */
+    private void process_$$(String expression, Node sourceNode, Document document) {
+        List<Node> sourceNodes = new ArrayList<Node>();
+
+        // foursquare がアホな出力するから
+        for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
+            Node childNode = sourceNode.getChildNodes().item(j);  
+//System.err.println("i:" + childNode);
+            sourceNodes.add(childNode);
         }
-        matcher.appendTail(sb);
-//System.err.println("expression: " + sb.toString());
-        return sb.toString();
+        for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
+            Node childNode = sourceNode.getChildNodes().item(j);  
+            sourceNode.removeChild(childNode);
+        }
+        
+        String[] parts = expression.split("\\$\\$", -1);
+//System.err.println("parts:" + parts.length);
+        if (parts.length > 1) {
+            for (int j = 0; j < parts.length - 1; j++) {
+                if (!parts[j].isEmpty()) {
+                    sourceNode.appendChild(document.createTextNode(parts[j]));
+                }
+                for (Node n : sourceNodes) {
+//System.err.println("o:" + n);
+                    sourceNode.appendChild(n);
+                }
+            }
+        }
     }
 
     /** */
-    private String process_xpath_sdf(String expression, Node node) throws XPathExpressionException {
-        Pattern pattern = Pattern.compile("xpath_sdf\\s*\\(\\s*'([/@\\[\\]\\(\\)\\w]+)'\\s*,\\s*'(.+)'\\s*,\\s*'(.+)'\\s*\\)");
-        Matcher matcher = pattern.matcher(expression);
-        StringBuffer sb = new StringBuffer();
-        while (matcher.find()) {
-            String xpath = matcher.group(1);
-            String format1 = matcher.group(2);
-            String format2 = matcher.group(3);
-            String datetime = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
-            String replacement;
-            try {
-                replacement = new SimpleDateFormat(format2).format(new SimpleDateFormat(format1, Locale.ENGLISH).parse(datetime)); // TODO formats locale
+    public String function_xpath(String xpath, Node node) throws XPathExpressionException {
+        String replacement = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
+//System.err.println("replacement: " + replacement);
+        return replacement;
+    }
+
+    /** */
+    public String function_xpath_sdf(String xpath, String format1, String format2, Node node) throws XPathExpressionException {
+        String datetime = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
+        String replacement;
+        try {
+            replacement = new SimpleDateFormat(format2).format(new SimpleDateFormat(format1, Locale.ENGLISH).parse(datetime)); // TODO formats locale
             } catch (ParseException e) {
 System.err.println("parse error: " + format1);
-                replacement = datetime;
-            }
-            matcher.appendReplacement(sb, replacement);
+            replacement = datetime;
         }
-        matcher.appendTail(sb);
-//System.err.println("expression: " + sb.toString());
-        return sb.toString();
+//System.err.println("replacement: " + replacement);
+        return replacement;
+    }
+
+    /** */
+    private void process_script(String expression, Node node, Node sourceNode, Document document) {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("js");
+
+        Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
+        bindings.put("xed", this);
+        bindings.put("node", node);
+
+        String prepare = "xpath = function(path) { return xed.function_xpath(path, node); };" +
+            "xpath_sdf = function(path, format1, format2) { return xed.function_xpath_sdf(path, format1, format2, node); };";
+
+        try {
+            String result = (String) engine.eval(prepare + expression);
+            process_$$(result, sourceNode, document);
+        } catch (ScriptException e) {
+e.printStackTrace(System.err);
+            throw new IllegalArgumentException("invalid script: " + expression);
+        }
     }
 
     /**
