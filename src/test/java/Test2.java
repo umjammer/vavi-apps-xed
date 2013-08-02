@@ -7,6 +7,9 @@
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+
 import org.junit.Test;
 
 
@@ -66,7 +69,21 @@ System.err.println(sb.toString());
         for (String s : parts) {
             System.err.println(i++ + ": [" + s + "]");
         }
-}
+    }
+
+    @Test
+    public void test3() throws Exception {
+        ScriptEngineManager manager = new ScriptEngineManager();
+        ScriptEngine engine = manager.getEngineByName("js");
+
+        String pre = "xpath = function(path) { return java.lang.System.getProperty('java.vendor'); };";
+        String expression = "xpath('/kml/Folder/Placemark/')";
+        
+        Object result = engine.eval(pre + expression);
+
+        System.err.println(result);
+    }
+    
 }
 
 /* */
