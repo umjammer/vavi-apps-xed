@@ -35,8 +35,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import org.klab.commons.cli.Argument;
-import org.klab.commons.cli.Binded;
 import org.klab.commons.cli.Binder;
+import org.klab.commons.cli.Bound;
 import org.klab.commons.cli.Option;
 import org.klab.commons.cli.Options;
 
@@ -95,7 +95,7 @@ public class xed {
 
     /** */
     @Option(option = "s", argName = "sorter target_xpath key_xpath [asc|desc] [datetime|string] [option]", args = 5)
-    @Binded(binder = SorterBinder.class)
+    @Bound(binder = SorterBinder.class)
     private Sorter sorter;
     
     /** */
@@ -127,7 +127,7 @@ public class xed {
 
     /** */
     @Option(option = "e", argName = "editor target_xpath source_xpath dest_expression", args = 3)
-    @Binded(binder = EditorBinder.class)
+    @Bound(binder = EditorBinder.class)
     private Editor editor;
 
     /** */
@@ -345,7 +345,7 @@ public class xed {
         String replacement;
         try {
             replacement = new SimpleDateFormat(format2).format(new SimpleDateFormat(format1, Locale.ENGLISH).parse(datetime)); // TODO formats locale
-            } catch (ParseException e) {
+        } catch (ParseException e) {
 System.err.println("parse error: " + format1);
             replacement = datetime;
         }
