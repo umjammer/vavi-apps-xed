@@ -12,7 +12,7 @@
     <name></name>
   </organization>
   <version>1.0.0</version>
-  <url>http://www.vavisoft.com/</url>
+  <url>https://github.com/umjammer/vavi-apps-xed</url>
   <description></description>
   <build>
     <plugins>
@@ -44,7 +44,7 @@
   	<dependency>
   	  <groupId>org.klab</groupId>
   	  <artifactId>klab-commons-cli</artifactId>
-  	  <version>1.2.2</version>
+  	  <version>1.2.4</version>
   	</dependency>
   </dependencies>
 </project>
