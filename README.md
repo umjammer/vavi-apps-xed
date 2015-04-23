@@ -11,9 +11,9 @@ Example
 -------
 
 * a KML exported from the FourSquare
-** sort by updated time ascending
-** add updated time to description tag
-*** '$$' inside a string is replaced by the original inner text
+ * sort by updated time ascending
+ * add updated time to description tag
+   * '$$' inside a string is replaced by the original inner text
 
 ```
 $ xed -s "/kml/Folder/Placemark" "/kml/Folder/Placemark/updated/text()" asc datetime "EEE, d MMM yy HH:mm:ss Z" \
