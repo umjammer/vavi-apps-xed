@@ -13,8 +13,8 @@ Example
 * a KML exported from the [FourSquare](https://ja.foursquare.com/feeds/)
  * sort by updated time ascending (`-s` option)
  * add updated time to description tag (`-e` option)
-   * `'$$'` inside a string is replaced by the original inner text
-   * function `xpath_sdf(xpath, format1, format2)` reformats date/time text using `java.util.SimpleDateFormat`
+    * `'$$'` inside a string is replaced by the original inner text
+    * function `xpath_sdf(xpath, format1, format2)` reformats date/time text using `java.util.SimpleDateFormat`
 
 ```shell
 $ java -cp foo xed \
