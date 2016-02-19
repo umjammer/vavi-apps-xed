@@ -21,12 +21,28 @@
         <configuration>
           <source>1.5</source>
           <target>1.5</target>
-          <encoding>Windows-31J</encoding>
+          <encoding>UTF-8</encoding>
         </configuration>
       </plugin>
     </plugins>
   </build>
   <repositories>
+    <repository>
+      <id>klab-commons-cli-mvn-repo</id>
+      <url>https://raw.github.com/umjammer/klab-commons-cli/mvn-repo/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>vavi-util-screenscraping-mvn-repo</id>
+      <url>https://raw.github.com/umjammer/vavi-util-screenscraping/mvn-repo/</url>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>always</updatePolicy>
+      </snapshots>
+    </repository>
   </repositories>
   <dependencies>
   	<dependency>
@@ -46,5 +62,10 @@
   	  <artifactId>klab-commons-cli</artifactId>
   	  <version>1.2.4</version>
   	</dependency>
+    <dependency>
+      <groupId>vavi</groupId>
+      <artifactId>vavi-util-screenscraping</artifactId>
+      <version>1.0.1</version>
+    </dependency>
   </dependencies>
 </project>
