@@ -5,101 +5,55 @@
 <!--                                                                        -->
 <!-- Written by Naohide Sano                                                -->
 <!--                                                                        -->
-<!-- XPath                                                                  -->
+<!-- XML Editor                                                             -->
 <!--                                                                        -->
-<!-- @author	Naohide Sano                                                -->
-<!-- @version	0.00	021110	nsano	initial version                     -->
+<!-- @author Naohide Sano                                                   -->
+<!-- @version 0.00 021110 nsano initial version                             -->
 <!--                                                                        -->
 <!-- ////////////////////////////////////////////////////////////////////// -->
 
 <project name="xed" default="run" basedir="."
-         xmlns:ivy="antlib:org.apache.ivy.ant">
- 
-  <!-- プロパティの定義 -->
-  <property file="local.properties" />
+         xmlns:artifact="urn:maven-artifact-ant">
 
-  <property name="dir.lib" value="lib" />
-  <property name="dir.build" value="target/classes" />
-
-  <!-- クラスパスの定義 -->
-  <path id="project.class.path">
-    <pathelement location="${dir.build}" />
-    <fileset dir="lib">
-      <include name="*.jar" />
+  <path id="maven-ant-tasks.classpath">
+    <fileset dir="${user.home}/lib/java">
+      <include name="maven-ant-tasks*.jar" />
     </fileset>
   </path>
+  <typedef resource="org/apache/maven/artifact/ant/antlib.xml" uri="urn:maven-artifact-ant"
+           classpathref="maven-ant-tasks.classpath" /> 
 
-  <!-- ターゲットの定義 -->
+  <property environment="env"/>
+  <property file="local.properties" />
+  <xmlproperty file="pom.xml" />
 
-  <!-- clean -->
-  <target name="clean" description="ビルド環境のクリア">
-    <delete>
-      <fileset dir="${dir.lib}">
-        <include name="*" />
-      </fileset>
-      <fileset dir="${dir.build}">
-        <include name="**/*" />
-      </fileset>
-      <fileset dir="target/test-classes">
-        <include name="**/*" />
-      </fileset>
-    </delete>
-    <ivy:cleancache/>
-  </target>
+  <!-- Path Definitions -->
+  <path id="project.class.path">
+    <pathelement location="${javac.dest.test}" />
+    <pathelement location="${javac.dest}" />
+    <fileset refid="maven-ant-tasks.dependency.fileset"/>
+  </path>
 
   <!-- prepare -->
-  <target name="prepare" description="ビルド環境の準備">
-    <ivy:settings file="ivy-settings.xml" />
-    <ivy:convertpom pomFile="pom.xml" ivyFile="${ivy.file}" />
-    <ivy:retrieve file="${ivy.file}" />
-  </target>
-
-  <!-- javac -->
-  <target name="compile" depends="prepare" description="コンパイル">
-    <javac debug="on" destdir="${dir.build}" encoding="${encoding}">
-      <classpath refid="project.class.path" />
-      <include name="**/*.java" />
-      <src path="src/main/java" />
-    </javac>
-
-    <copy todir="${dir.build}">
-      <fileset dir="src/main/resources">
-        <include name="**/*" />
-      </fileset>
-    </copy>
-
-    <javac debug="on" encoding="${encoding}" destdir="target/test-classes">
-      <classpath>
-        <path refid="project.class.path" />
-        <pathelement location="${dir.build}" />
-      </classpath>
-      <include name="**/*.java" />
-      <src path="src/test/java" />
-    </javac>
-
-    <copy todir="target/test-classes">
-      <fileset dir="src/test/resources">
-        <include name="**/*" />
-      </fileset>
-    </copy>
-  </target>
-
-  <!-- jar -->
-  <target name="packaging" depends="compile" description="パッケージング">
-    <jar destfile="xed.jar">
-      <fileset dir="${dir.build}">
-        <include name="**/*" />
-      </fileset>
-    </jar>
+  <target name="prepare" description="Preparing">
+    <artifact:pom file="pom.xml" id="maven.project"/>
+    <artifact:dependencies fileSetId="maven-ant-tasks.dependency.fileset">
+      <pom refid="maven.project"/>
+    </artifact:dependencies>
+    <artifact:mvn pom="pom.xml">
+      <arg value="-q" />
+      <arg value="clean" />
+      <arg value="package" />
+      <arg value="-DskipTests=true" />
+    </artifact:mvn>
   </target>
 
   <!-- run -->
-  <target name="run" depends="compile" description="プログラムの実行">
-    <java classname="xed" fork="yes" jvm="${jvm}" output="${run.out}">
-      <jvmarg value="-Dfile.encoding=${encoding}" />
+  <target name="run" depends="prepare" description="fix foursquare output kml">
+    <java classname="xed" fork="yes" jvm="${jvm}" output="${run.out}" error="${stderr}">
+      <jvmarg value="-Dfile.encoding=${project.build.plugins.plugin.configuration.encoding}" />
       <classpath>
         <path refid="project.class.path" />
-        <pathelement location="target/classes" />
       </classpath>
       <arg value="-s" />
       <arg value="/kml/Folder/Placemark" />
@@ -110,8 +64,22 @@
       <arg value="-e" />
       <arg value="/kml/Folder/Placemark" />
       <arg value="/kml/Folder/Placemark/description" />
-      <arg value="xpath_sdf('/kml/Folder/Placemark/updated/text()', 'EEE, d MMM yy HH:mm:ss Z', 'yyyy/MM/dd HH:mm:ss') + ' | $$'" />
+      <arg value="xpath_sdf('/kml/Folder/Placemark/updated/text()', 'EEE, d MMM yy HH:mm:ss Z', 'yyyy/MM/dd HH:mm:ss') + ' | $$$$'" />
       <arg value="${run.in}" />
+    </java>
+  </target>
+
+  <!-- split -->
+  <target name="split" depends="prepare" description="split">
+    <java classname="xed" fork="yes" jvm="${jvm}" output="${split.out}" error="${stderr}">
+      <jvmarg value="-Dfile.encoding=${project.build.plugins.plugin.configuration.encoding}" />
+      <classpath>
+        <path refid="project.class.path" />
+      </classpath>
+      <arg value="-S" />
+      <arg value="${split.xpath}" />
+      <arg value="${split.size}" />
+      <arg value="${split.in}" />
     </java>
   </target>
 

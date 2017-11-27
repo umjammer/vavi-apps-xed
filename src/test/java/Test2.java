@@ -14,7 +14,7 @@ import org.junit.Test;
 
 
 /**
- * Test2. 
+ * Test2.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2013/07/02 umjammer initial version <br>
@@ -37,7 +37,7 @@ System.err.println(replacement);
         matcher1.appendTail(sb);
 System.err.println(sb.toString());
     }
-    
+
     @Test
     public void test2() throws Exception {
         String[] parts = "2013/06/21 20:20:48 | $$".split("\\$\\$", -1);
@@ -78,12 +78,12 @@ System.err.println(sb.toString());
 
         String pre = "xpath = function(path) { return java.lang.System.getProperty('java.vendor'); };";
         String expression = "xpath('/kml/Folder/Placemark/')";
-        
+
         Object result = engine.eval(pre + expression);
 
         System.err.println(result);
     }
-    
+
 }
 
 /* */

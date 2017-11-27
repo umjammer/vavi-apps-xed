@@ -51,7 +51,6 @@ System.err.println("SaxonXPathParser: xpath: " + XPathFactory.newInstance().getC
 
             if (List.class.isInstance(nodeSet)) {
 
-                @SuppressWarnings("unchecked")
                 List<NodeInfo> nodeList = List.class.cast(nodeSet);
 //System.err.println("nodeList: " + nodeList.size());
                 for (int i = 0; i < nodeList.size(); i++) {
@@ -66,6 +65,7 @@ System.out.println("[" + i + "]------------------ ");
 //System.err.println("nodeList: " + nodeList.getLength());
                 for (int i = 0; i < nodeList.getLength(); i++) {
 
+                    @SuppressWarnings("unused")
                     String text = nodeList.item(i).getTextContent().trim();
 //System.err.println(field.getName() + ": " + text);
                 }

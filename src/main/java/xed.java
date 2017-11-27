@@ -12,8 +12,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Queue;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -45,7 +47,7 @@ import vavi.xml.util.PrettyPrinter;
 
 /**
  * Command line XML editor.
- * 
+ *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2013/07/30 umjammer initial version <br>
  */
@@ -82,7 +84,7 @@ public class xed {
         boolean ascend;
         /** datetime | string */
         Type type;
-        /** datetime: date time format @see {@link java.util.DateFormat} */
+        /** datetime: author time format @see {@link java.util.DateFormat} */
         String option;
         public String toString() {
             return "targetXPath: " + targetXPath +
@@ -97,7 +99,7 @@ public class xed {
     @Option(option = "s", argName = "sorter target_xpath key_xpath [asc|desc] [datetime|string] [option]", args = 5)
     @Bound(binder = SorterBinder.class)
     private Sorter sorter;
-    
+
     /** */
     public static class SorterBinder implements Binder<xed> {
         public void bind(xed bean, String[] args, Context context) {
@@ -141,6 +143,32 @@ public class xed {
     }
 
     /** */
+    private static class Splitter {
+        /** xpath for splitting nodes */
+        String targetXPath;
+        /** max number for splitting node */
+        int maxNumber;
+        public String toString() {
+            return "targetXPath: " + targetXPath +
+                    ", sourceXPath: " + maxNumber;
+        }
+    }
+
+    /** */
+    @Option(option = "S", argName = "splitter target_xpath max_number", args = 2)
+    @Bound(binder = SplitterBinder.class)
+    private Splitter splitter;
+
+    /** */
+    public static class SplitterBinder implements Binder<xed> {
+        public void bind(xed bean, String[] args, Context context) {
+            bean.splitter = new Splitter();
+            bean.splitter.targetXPath = args[0];
+            bean.splitter.maxNumber = Integer.parseInt(args[1]);
+        }
+    }
+
+    /** */
     @Argument(index = 0)
     private File inFile;
 
@@ -149,7 +177,7 @@ public class xed {
 
     /** */
     private DocumentBuilder db;
-    
+
     /* */
     {
         try {
@@ -169,9 +197,9 @@ public class xed {
      * <pre>
      * &lt;foo&gt;
      *   &lt;bar&gt;
-     *     &lt;buz&gt;&lt;key&gt;3&lt;/key&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt; 
+     *     &lt;buz&gt;&lt;key&gt;3&lt;/key&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt;
      *     &lt;buz&gt;&lt;key&gt;1&lt;/key&gt;&lt;/buz&gt; &lt;!-- buz 中に含まれる要素 key の値でソートする --&gt;
-     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt;
      *     &lt;buz&gt;&lt;key&gt;4&lt;/key&gt;&lt;/buz&gt;
      *   &lt;/bar&gt;
      * &lt;/foo&gt;
@@ -181,13 +209,13 @@ public class xed {
      * &lt;foo&gt;
      *   &lt;bar&gt;
      *     &lt;buz&gt;&lt;key&gt;1&lt;/key&gt;&lt;/buz&gt;
-     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;key&gt;2&lt;/key&gt;&lt;/buz&gt;
      *     &lt;buz&gt;&lt;key&gt;3&lt;/key&gt;&lt;/buz&gt;
      *     &lt;buz&gt;&lt;key&gt;4&lt;/key&gt;&lt;/buz&gt;
      *   &lt;/bar&gt;
      * &lt;/foo&gt;
      * </pre>
-     * 
+     *
      * @param document
      */
     void sort(Document document) {
@@ -197,7 +225,7 @@ public class xed {
             NodeList nodeList = NodeList.class.cast(nodeSet);
 //System.err.println("nodeList: " + nodeList.getLength());
 
-            SortedMap<String, Node> nodes = new TreeMap<String, Node>(new Comparator<String>() {
+            SortedMap<String, Node> nodes = new TreeMap<>(new Comparator<String>() {
                 public int compare(String o1, String o2) {
                     return sorter.type.compareTo(o1, o2, sorter);
                 }
@@ -206,7 +234,7 @@ public class xed {
             Node parent = null;
 
             for (int i = 0; i < nodeList.getLength(); i++) {
-    
+
                 Node node = nodeList.item(i);
                 if (parent == null) {
                     parent = node.getParentNode();
@@ -222,19 +250,19 @@ public class xed {
             for (Node node : nodes.values()) {
                 parent.appendChild(node);
             }
-            
+
         } catch (XPathExpressionException e) {
             throw new IllegalArgumentException(e);
         }
     }
-    
+
     /**
      * edit targetXPath sourceXPath destinationExpression
      * <p>
      * functions
      * <ul>
      *  <li>xpath: xpath reference</li>
-     *  <li>xpath_sdf: xpath reference with simple date format</li>
+     *  <li>xpath_sdf: xpath reference with simple author format</li>
      * </ul>
      * <li>$$: source reference</li>
      * </p>
@@ -245,10 +273,10 @@ public class xed {
      * <pre>
      * &lt;foo&gt;
      *   &lt;bar&gt;
-     *     &lt;buz&gt;&lt;target&gt;3&lt;/target&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt; 
+     *     &lt;buz&gt;&lt;target&gt;3&lt;/target&gt;&lt;/buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt;
      *     &lt;buz&gt;&lt;target&gt;1&lt;/target&gt;&lt;/buz&gt; &lt;!-- buz 中に含まれる要素 target のテキストを編集をする --&gt;
-     *     &lt;buz&gt;&lt;target&gt;2&lt;/target&gt;&lt;/buz&gt; 
-     *     &lt;buz&gt;&lt;target&gt;4&lt;/target&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;target&gt;2&lt;/target&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;target&gt;4&lt;/target&gt;&lt;/buz&gt;
      *   &lt;/bar&gt;
      * &lt;/foo&gt;
      * </pre>
@@ -258,8 +286,8 @@ public class xed {
      *   &lt;bar&gt;
      *     &lt;buz&gt;&lt;target&gt;number is 3&lt;/target&gt;&lt;/buz&gt;
      *     &lt;buz&gt;&lt;target&gt;number is 1&lt;/target&gt;&lt;/buz&gt;
-     *     &lt;buz&gt;&lt;target&gt;number is 2&lt;/target&gt;&lt;/buz&gt; 
-     *     &lt;buz&gt;&lt;target&gt;number is 4&lt;/target&gt;&lt;/buz&gt; 
+     *     &lt;buz&gt;&lt;target&gt;number is 2&lt;/target&gt;&lt;/buz&gt;
+     *     &lt;buz&gt;&lt;target&gt;number is 4&lt;/target&gt;&lt;/buz&gt;
      *   &lt;/bar&gt;
      * &lt;/foo&gt;
      * </pre>
@@ -273,12 +301,12 @@ public class xed {
             NodeList nodeList = NodeList.class.cast(nodeSet);
 //System.err.println("nodeList: " + nodeList.getLength());
 
-            List<Node> nodes = new ArrayList<Node>();
+            List<Node> nodes = new ArrayList<>();
 
             Node parent = null;
 
             for (int i = 0; i < nodeList.getLength(); i++) {
-    
+
                 Node node = nodeList.item(i);
                 if (parent == null) {
                     parent = node.getParentNode();
@@ -304,19 +332,19 @@ public class xed {
 
     /** replaces $$ */
     private void process_$$(String expression, Node sourceNode, Document document) {
-        List<Node> sourceNodes = new ArrayList<Node>();
+        List<Node> sourceNodes = new ArrayList<>();
 
         // foursquare がアホな出力するから
         for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
-            Node childNode = sourceNode.getChildNodes().item(j);  
+            Node childNode = sourceNode.getChildNodes().item(j);
 //System.err.println("i:" + childNode);
             sourceNodes.add(childNode);
         }
         for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
-            Node childNode = sourceNode.getChildNodes().item(j);  
+            Node childNode = sourceNode.getChildNodes().item(j);
             sourceNode.removeChild(childNode);
         }
-        
+
         String[] parts = expression.split("\\$\\$", -1);
 //System.err.println("parts:" + parts.length);
         if (parts.length > 1) {
@@ -367,10 +395,98 @@ System.err.println("parse error: " + format1);
 
         try {
             String result = (String) engine.eval(prepare + expression);
+//System.err.println("result: " + result);
             process_$$(result, sourceNode, document);
         } catch (ScriptException e) {
 e.printStackTrace(System.err);
             throw new IllegalArgumentException("invalid script: " + expression);
+        }
+    }
+
+    /**
+     * split targetXPath maxNumber
+     * <pre>
+     * split "/foo/bar/buz" 3
+     * </pre>
+     * before
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *     &lt;buz&gt; &lt;!-- buz みたいな繰り返しがある部分 --&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     * </pre>
+     * after
+     * <pre>
+     * &lt;foo&gt;
+     *   &lt;bar&gt;
+     *   &lt;/bar&gt;
+     * &lt;/foo&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;!-- 3 --&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;!-- 6 --&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;buz&gt;
+     *     &lt;!-- 9 --&gt;
+     * </pre>
+     *
+     * @param document
+     */
+    void split(Document document) {
+        try {
+            Object nodeSet = xPath.evaluate(splitter.targetXPath, document, XPathConstants.NODESET);
+
+            NodeList nodeList = NodeList.class.cast(nodeSet);
+System.err.println("nodeList: " + nodeList.getLength());
+
+            Queue<Node> nodes = new LinkedList<>();
+
+            Node parent = null;
+
+            for (int i = 0; i < nodeList.getLength(); i++) {
+
+                Node node = nodeList.item(i);
+                if (parent == null) {
+                    parent = node.getParentNode();
+                }
+
+                nodes.add(node);
+
+                parent.removeChild(node);
+            }
+
+            int size = nodes.size();
+outer:
+            while (size > 0) {
+                int c = 0;
+                while (c < splitter.maxNumber) {
+                    Node node = nodes.poll();
+                    if (node == null) {
+                        break outer;
+                    }
+                    parent.appendChild(node);
+                    c++;
+                    size--;
+                }
+                parent.appendChild(document.createComment(" ---- x8 ---- split here " + size + " ---- x8 ---- "));
+            }
+
+        } catch (XPathExpressionException e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
@@ -388,6 +504,10 @@ e.printStackTrace(System.err);
         if (app.editor != null) {
 //System.err.println(app.editor);
             app.edit(document);
+        }
+        if (app.splitter != null) {
+//System.err.println(app.splitter);
+            app.split(document);
         }
         new PrettyPrinter(new PrintWriter(System.out)).print(document);
     }
