@@ -6,12 +6,12 @@
     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>vavi</groupId>
-  <artifactId>vavi-xed</artifactId>
-  <name>Vavi XED Application</name>
+  <artifactId>vavi-apps-xed</artifactId>
+  <name>Xml EDitor Application</name>
   <organization>
-    <name></name>
+    <name>vavi inc.</name>
   </organization>
-  <version>1.0.0</version>
+  <version>1.1.0</version>
   <url>https://github.com/umjammer/vavi-apps-xed</url>
   <description></description>
   <build>
