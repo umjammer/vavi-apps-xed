@@ -1,4 +1,4 @@
-[![Release](https://jitpack.io/v/umjammer/xed.svg)](https://jitpack.io/#umjammer/xed)
+[![Release](https://jitpack.io/v/umjammer/vavi-apps-xed.svg)](https://jitpack.io/#umjammer/vavi-apps-xed)
 
 # XED XML EDitor
 
