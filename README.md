@@ -1,14 +1,13 @@
-XED XML EDitor
---------------
+[![Release](https://jitpack.io/v/umjammer/xed.svg)](https://jitpack.io/#umjammer/xed)
 
-Goal
-----
+# XED XML EDitor
+
+## Goal
 
 * sort by tag
 * edit inner text specified by tag
 
-Example
--------
+## Example
 
 * a KML exported from the [FourSquare](https://ja.foursquare.com/feeds/)
  * sort by updated time ascending (`-s` option)
