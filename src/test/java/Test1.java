@@ -25,7 +25,7 @@ import vavi.xml.util.PrettyPrinter;
 
 
 /**
- * Test1. 
+ * Test1.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (umjammer)
  * @version 0.00 2013/07/02 umjammer initial version <br>
@@ -39,7 +39,7 @@ public class Test1 {
         xPath = XPathFactory.newInstance().newXPath();
 System.err.println("SaxonXPathParser: xpath: " + XPathFactory.newInstance().getClass());
     }
-    
+
     /** */
     public void parse(Reader inputHandler, String xpath) throws IOException {
         try {

@@ -50,7 +50,7 @@
 
   <!-- run -->
   <target name="run" depends="prepare" description="fix foursquare output kml">
-    <java classname="xed" fork="yes" jvm="${jvm}" output="${run.out}" error="${stderr}">
+    <java classname="vavi.apps.xed.App" fork="yes" jvm="${jvm}" output="${run.out}" error="${stderr}">
       <jvmarg value="-Dfile.encoding=${project.build.plugins.plugin.configuration.encoding}" />
       <classpath>
         <path refid="project.class.path" />
@@ -71,7 +71,7 @@
 
   <!-- split -->
   <target name="split" depends="prepare" description="split">
-    <java classname="xed" fork="yes" jvm="${jvm}" output="${split.out}" error="${stderr}">
+    <java classname="vavi.apps.xed.App" fork="yes" jvm="${jvm}" output="${split.out}" error="${stderr}">
       <jvmarg value="-Dfile.encoding=${project.build.plugins.plugin.configuration.encoding}" />
       <classpath>
         <path refid="project.class.path" />
