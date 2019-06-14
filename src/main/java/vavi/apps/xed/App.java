@@ -33,17 +33,17 @@ import vavi.xml.util.PrettyPrinter;
 @Options
 public class App {
 
-    /** TODO can be more loosely coupled */
+    /** TODO could be more loosely coupled */
     @Option(option = "s", argName = "sorter target_xpath key_xpath [asc|desc] [datetime|string] [option]", args = 5)
     @Bound(binder = Sorter.class)
     public Sorter sorter;
 
-    /** TODO can be more loosely coupled */
+    /** TODO could be more loosely coupled */
     @Option(option = "e", argName = "editor target_xpath source_xpath dest_expression", args = 3)
     @Bound(binder = Editor.class)
     public Editor editor;
 
-    /** TODO can be more loosely coupled */
+    /** TODO could be more loosely coupled */
     @Option(option = "S", argName = "splitter target_xpath max_number", args = 2)
     @Bound(binder = Splitter.class)
     public Splitter splitter;
