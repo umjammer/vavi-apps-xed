@@ -69,7 +69,7 @@ public class Sorter implements Command, Binder<App> {
     /** datetime | string */
     Sorter.Type type;
 
-    /** datetime: author time format @see {@link java.util.DateFormat} */
+    /** datetime: author time format @see {@link java.text.DateFormat} */
     String option;
 
     /* */
