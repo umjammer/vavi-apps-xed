@@ -49,9 +49,10 @@ System.err.println("SaxonXPathParser: xpath: " + XPathFactory.newInstance().getC
 
             Object nodeSet = xPath.evaluate(xpath, in, XPathConstants.NODESET);
 
-            if (List.class.isInstance(nodeSet)) {
+            if (nodeSet instanceof List) {
 
-                List<NodeInfo> nodeList = List.class.cast(nodeSet);
+                @SuppressWarnings("unchecked")
+                List<NodeInfo> nodeList = (List<NodeInfo>) nodeSet;
 //System.err.println("nodeList: " + nodeList.size());
                 for (int i = 0; i < nodeList.size(); i++) {
 System.out.println("[" + i + "]------------------ ");
@@ -59,9 +60,9 @@ System.out.println("[" + i + "]------------------ ");
                     PrettyPrinter pp = new PrettyPrinter(System.out);
                     pp.print(NodeOverNodeInfo.wrap(nodeList.get(i)));
                 }
-            } else if (NodeList.class.isInstance(nodeSet)) {
+            } else if (nodeSet instanceof NodeList) {
 
-                NodeList nodeList = NodeList.class.cast(nodeSet);
+                NodeList nodeList = (NodeList) nodeSet;
 //System.err.println("nodeList: " + nodeList.getLength());
                 for (int i = 0; i < nodeList.getLength(); i++) {
 

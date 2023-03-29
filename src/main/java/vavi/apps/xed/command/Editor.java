@@ -47,14 +47,14 @@ public class Editor implements Command, Binder<App> {
     /** js expression, $$ in string replaced by child nodes of sourceXPath */
     String destinationExpression;
 
-    /* */
+    @Override
     public String toString() {
         return "targetXPath: " + targetXPath +
                 ", sourceXPath: " + sourceXPath +
                 ", destinationExpression: " + destinationExpression;
     }
 
-    /* */
+    @Override
     public void bind(App bean, String[] args, Context context) {
         bean.editor = new Editor();
         bean.editor.targetXPath = args[0];
@@ -98,13 +98,14 @@ public class Editor implements Command, Binder<App> {
      * &lt;/foo&gt;
      * </pre>
      *
-     * @param document
+     * @param document target to edit
      */
+    @Override
     public void exec(Document document) {
         try {
             Object nodeSet = xPath.evaluate(targetXPath, document, XPathConstants.NODESET);
 
-            NodeList nodeList = NodeList.class.cast(nodeSet);
+            NodeList nodeList = (NodeList) nodeSet;
 //System.err.println("nodeList: " + nodeList.getLength());
 
             List<Node> nodes = new ArrayList<>();
@@ -136,14 +137,14 @@ public class Editor implements Command, Binder<App> {
         }
     }
 
-    /** */
+    /** function for javascript */
     public String function_xpath(String xpath, Node node) throws XPathExpressionException {
         String replacement = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
 //System.err.println("replacement: " + replacement);
         return replacement;
     }
 
-    /** */
+    /** function for javascript */
     public String function_xpath_sdf(String xpath, String format1, String format2, Node node) throws XPathExpressionException {
         String datetime = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
         String replacement;
@@ -157,7 +158,7 @@ System.err.println("parse error: " + format1);
         return replacement;
     }
 
-    /** */
+    /** exec javascript */
     private void process_script(String expression, Node node, Node sourceNode, Document document) {
         ScriptEngineManager manager = new ScriptEngineManager();
         ScriptEngine engine = manager.getEngineByName("js");
@@ -183,7 +184,7 @@ e.printStackTrace(System.err);
     private void process_$$(String expression, Node sourceNode, Document document) {
         List<Node> sourceNodes = new ArrayList<>();
 
-        // foursquare がアホな出力するから
+        // cause foursquare's weired outputs
         for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
             Node childNode = sourceNode.getChildNodes().item(j);
 //System.err.println("i:" + childNode);

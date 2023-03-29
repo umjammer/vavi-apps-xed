@@ -36,13 +36,13 @@ public class Splitter implements Command, Binder<App> {
     /** max number for splitting node */
     int maxNumber;
 
-    /* */
+    @Override
     public String toString() {
         return "targetXPath: " + targetXPath +
                 ", sourceXPath: " + maxNumber;
     }
 
-    /* */
+    @Override
     public void bind(App bean, String[] args, Context context) {
         bean.splitter = new Splitter();
         bean.splitter.targetXPath = args[0];
@@ -90,13 +90,14 @@ public class Splitter implements Command, Binder<App> {
      *     &lt;!-- 9 --&gt;
      * </pre>
      *
-     * @param document
+     * @param document target to edit
      */
+    @Override
     public void exec(Document document) {
         try {
             Object nodeSet = xPath.evaluate(targetXPath, document, XPathConstants.NODESET);
 
-            NodeList nodeList = NodeList.class.cast(nodeSet);
+            NodeList nodeList = (NodeList) nodeSet;
 System.err.println("nodeList: " + nodeList.getLength());
 
             Queue<Node> nodes = new LinkedList<>();
