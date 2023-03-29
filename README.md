@@ -1,6 +1,11 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-apps-xed.svg)](https://jitpack.io/#umjammer/vavi-apps-xed)
+[![Java CI](https://github.com/umjammer/vavi-apps-xed/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-apps-xed/actions/workflows/maven.yml)
+[![CodeQL](https://github.com/umjammer/vavi-apps-xed/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/vavi-apps-xed/actions/workflows/codeql-analysis.yml)
+![Java](https://img.shields.io/badge/Java-8-b07219)
 
 # XED XML EDitor
+
+a command line xml editor.
 
 ## Goal
 

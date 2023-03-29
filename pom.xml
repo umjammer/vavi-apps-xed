@@ -10,21 +10,105 @@
   <artifactId>vavi-apps-xed</artifactId>
   <version>1.1.0</version>
 
-  <name>Xml EDitor Application</name>
+  <name>XED Xml EDitor</name>
   <organization>
-    <name>vavi inc.</name>
+    <name>vavi</name>
   </organization>
   <url>https://github.com/umjammer/vavi-apps-xed</url>
-  <description></description>
+  <description>a command line xml editor</description>
+
+  <profiles>
+    <profile>
+      <!-- mvn -P run antrun:run -Darchive='archive' -->
+      <id>run</id>
+  <build>
+    <plugins>
+      <plugin>
+            <!-- GOOD: fork: OK, test jars: OK, user args, default args: OK -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="vavi.apps.xed.App" fork="yes" output="${run.out}">
+                  <classpath>
+                    <path refid="project.class.path" />
+                  </classpath>
+                  <arg value="-s" />
+                  <arg value="/kml/Folder/Placemark" />
+                  <arg value="/kml/Folder/Placemark/updated/text()" />
+                  <arg value="asc" />
+                  <arg value="datetime" />
+                  <arg value="EEE, d MMM yy HH:mm:ss Z" />
+                  <arg value="-e" />
+                  <arg value="/kml/Folder/Placemark" />
+                  <arg value="/kml/Folder/Placemark/description" />
+                  <arg value="xpath_sdf('/kml/Folder/Placemark/updated/text()', 'EEE, d MMM yy HH:mm:ss Z', 'yyyy/MM/dd HH:mm:ss') + ' | $$$$'" />
+                  <arg value="${run.in}" />
+                </java>
+              </target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+
+    <profile>
+      <!-- mvn -P split antrun:run -Darchive='archive' -->
+      <id>split</id>
+      <build>
+        <plugins>
+          <plugin>
+            <!-- GOOD: fork: OK, test jars: OK, user args, default args: OK -->
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>3.1.0</version>
+            <goals>
+              <goal>run</goal>
+            </goals>
+            <configuration>
+              <target>
+                <java classname="vavi.apps.xed.App" fork="yes" output="${split.out}">
+                  <classpath>
+                    <path refid="project.class.path" />
+                  </classpath>
+                  <arg value="-S" />
+                  <arg value="${split.xpath}" />
+                  <arg value="${split.size}" />
+                  <arg value="${split.in}" />
+                </java>
+              </target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 
   <build>
     <plugins>
       <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.10.1</version>
         <configuration>
           <source>1.8</source>
           <target>1.8</target>
           <encoding>UTF-8</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.0.0-M7</version>
+        <configuration>
+          <argLine>
+            -Djava.util.logging.config.file=${project.build.testOutputDirectory}/logging.properties
+          </argLine>
+          <trimStackTrace>false</trimStackTrace>
         </configuration>
       </plugin>
     </plugins>
@@ -37,11 +121,23 @@
     </repository>
   </repositories>
 
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.junit</groupId>
+        <artifactId>junit-bom</artifactId>
+        <version>5.9.2</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
   <dependencies>
     <dependency>
       <groupId>net.sf.saxon</groupId>
       <artifactId>Saxon-HE</artifactId>
-      <version>9.7.0-3</version>
+      <version>11.5</version>
     </dependency>
     <dependency>
       <groupId>com.github.umjammer</groupId>
@@ -51,19 +147,17 @@
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-commons</artifactId>
-      <version>1.0.8</version>
+      <version>1.1.9</version>
     </dependency>
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-api</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>
       <artifactId>junit-jupiter-engine</artifactId>
-      <version>5.3.0</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
