@@ -35,7 +35,7 @@ System.err.println(replacement);
             matcher1.appendReplacement(sb, replacement);
         }
         matcher1.appendTail(sb);
-System.err.println(sb.toString());
+System.err.println(sb);
     }
 
     @Test
@@ -83,7 +83,6 @@ System.err.println(sb.toString());
 
         System.err.println(result);
     }
-
 }
 
 /* */

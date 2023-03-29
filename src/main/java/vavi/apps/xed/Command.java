@@ -24,7 +24,7 @@ public interface Command {
     void exec(Document document);
 
     /** TODO */
-    static XPath xPath = XPathFactory.newInstance().newXPath();
+    XPath xPath = XPathFactory.newInstance().newXPath();
 }
 
 /* */
