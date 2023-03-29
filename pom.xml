@@ -8,7 +8,7 @@
 
   <groupId>vavi</groupId>
   <artifactId>vavi-apps-xed</artifactId>
-  <version>1.1.0</version>
+  <version>1.1.1</version>
 
   <name>XED Xml EDitor</name>
   <organization>
@@ -21,9 +21,9 @@
     <profile>
       <!-- mvn -P run antrun:run -Darchive='archive' -->
       <id>run</id>
-  <build>
-    <plugins>
-      <plugin>
+      <build>
+        <plugins>
+          <plugin>
             <!-- GOOD: fork: OK, test jars: OK, user args, default args: OK -->
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-antrun-plugin</artifactId>
