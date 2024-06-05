@@ -1,11 +1,11 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-apps-xed.svg)](https://jitpack.io/#umjammer/vavi-apps-xed)
 [![Java CI](https://github.com/umjammer/vavi-apps-xed/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-apps-xed/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/vavi-apps-xed/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/umjammer/vavi-apps-xed/actions/workflows/codeql-analysis.yml)
-![Java](https://img.shields.io/badge/Java-8-b07219)
+![Java](https://img.shields.io/badge/Java-17-b07219)
 
-# XED XML EDitor
+# XED
 
-a command line xml editor.
+a command line **X**ml **ED**itor.
 
 ## Goal
 
@@ -15,8 +15,8 @@ a command line xml editor.
 ## Example
 
 * a KML exported from the [FourSquare](https://ja.foursquare.com/feeds/)
- * sort by updated time ascending (`-s` option)
- * add updated time to description tag (`-e` option)
+* sort by updated time ascending (`-s` option)
+* add updated time to description tag (`-e` option)
     * `'$$'` inside a string is replaced by the original inner text
     * function `xpath_sdf(xpath, format1, format2)` reformats date/time text using `java.util.SimpleDateFormat`
 
@@ -30,3 +30,8 @@ $ java -cp foo xed \
 ```
 $ xmllint --format foo.kml > bar.kml
 ```
+
+## TODO
+
+* splitter (wip?)
+* ~~bump all version of a dependency in my projects pom.xml~~
