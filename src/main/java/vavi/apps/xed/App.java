@@ -74,5 +74,3 @@ public class App {
         new PrettyPrinter(new PrintWriter(System.out)).print(document);
     }
 }
-
-/* */

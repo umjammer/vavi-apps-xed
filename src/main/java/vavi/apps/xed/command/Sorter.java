@@ -157,5 +157,3 @@ public class Sorter implements Command, Binder<App> {
         }
     }
 }
-
-/* */

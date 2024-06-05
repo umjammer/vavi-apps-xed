@@ -26,5 +26,3 @@ public interface Command {
     /** TODO */
     XPath xPath = XPathFactory.newInstance().newXPath();
 }
-
-/* */
