@@ -87,5 +87,3 @@ System.out.println("[" + i + "]------------------ ");
         app.parse(new FileReader("/Users/nsano/Downloads/41XOYOEQ25TBK1GU0APANDOEFC2RK3D5.kml"), "/kml/Folder/Placemark");
     }
 }
-
-/* */

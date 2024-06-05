@@ -6,12 +6,13 @@
 
 package vavi.apps.xed.command;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-
 import javax.script.Bindings;
 import javax.script.ScriptContext;
 import javax.script.ScriptEngine;
@@ -20,14 +21,15 @@ import javax.script.ScriptException;
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.klab.commons.cli.Binder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.klab.commons.cli.Binder;
-
 import vavi.apps.xed.App;
 import vavi.apps.xed.Command;
+import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -37,6 +39,8 @@ import vavi.apps.xed.Command;
  * @version 0.00 2019/04/08 umjammer initial version <br>
  */
 public class Editor implements Command, Binder<App> {
+
+    private static final Logger logger = getLogger(Editor.class.getName());
 
     /** xpath for editing nodes */
     String targetXPath;
@@ -106,7 +110,7 @@ public class Editor implements Command, Binder<App> {
             Object nodeSet = xPath.evaluate(targetXPath, document, XPathConstants.NODESET);
 
             NodeList nodeList = (NodeList) nodeSet;
-//System.err.println("nodeList: " + nodeList.getLength());
+//logger.log(Level.DEBUG, "nodeList: " + nodeList.getLength());
 
             List<Node> nodes = new ArrayList<>();
 
@@ -140,7 +144,7 @@ public class Editor implements Command, Binder<App> {
     /** function for javascript */
     public String function_xpath(String xpath, Node node) throws XPathExpressionException {
         String replacement = (String) xPath.evaluate(xpath, node, XPathConstants.STRING);
-//System.err.println("replacement: " + replacement);
+//logger.log(Level.DEBUG, "replacement: " + replacement);
         return replacement;
     }
 
@@ -151,17 +155,17 @@ public class Editor implements Command, Binder<App> {
         try {
             replacement = new SimpleDateFormat(format2).format(new SimpleDateFormat(format1, Locale.ENGLISH).parse(datetime)); // TODO formats locale
         } catch (ParseException e) {
-System.err.println("parse error: " + format1);
+logger.log(Level.DEBUG, "parse error: " + format1);
             replacement = datetime;
         }
-//System.err.println("replacement: " + replacement);
+//logger.log(Level.DEBUG, "replacement: " + replacement);
         return replacement;
     }
 
     /** exec javascript */
     private void process_script(String expression, Node node, Node sourceNode, Document document) {
         ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("js");
+        ScriptEngine engine = manager.getEngineByName("javascript");
 
         Bindings bindings = engine.getBindings(ScriptContext.ENGINE_SCOPE);
         bindings.put("App", this);
@@ -172,10 +176,10 @@ System.err.println("parse error: " + format1);
 
         try {
             String result = (String) engine.eval(prepare + expression);
-//System.err.println("result: " + result);
+//logger.log(Level.DEBUG, "result: " + result);
             process_$$(result, sourceNode, document);
         } catch (ScriptException e) {
-e.printStackTrace(System.err);
+Debug.printStackTrace(java.util.logging.Level.FINE, e);
             throw new IllegalArgumentException("invalid script: " + expression);
         }
     }
@@ -187,7 +191,7 @@ e.printStackTrace(System.err);
         // cause foursquare's weired outputs
         for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
             Node childNode = sourceNode.getChildNodes().item(j);
-//System.err.println("i:" + childNode);
+//logger.log(Level.DEBUG, "i:" + childNode);
             sourceNodes.add(childNode);
         }
         for (int j = 0; j < sourceNode.getChildNodes().getLength(); j++) {
@@ -196,19 +200,17 @@ e.printStackTrace(System.err);
         }
 
         String[] parts = expression.split("\\$\\$", -1);
-//System.err.println("parts:" + parts.length);
+//logger.log(Level.DEBUG, "parts:" + parts.length);
         if (parts.length > 1) {
             for (int j = 0; j < parts.length - 1; j++) {
                 if (!parts[j].isEmpty()) {
                     sourceNode.appendChild(document.createTextNode(parts[j]));
                 }
                 for (Node n : sourceNodes) {
-//System.err.println("o:" + n);
+//logger.log(Level.DEBUG, "o:" + n);
                     sourceNode.appendChild(n);
                 }
             }
         }
     }
 }
-
-/* */

@@ -4,10 +4,12 @@
  * Programmed by Naohide Sano
  */
 
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 
 import org.junit.jupiter.api.Test;
@@ -74,7 +76,11 @@ System.err.println(sb);
     @Test
     public void test3() throws Exception {
         ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("js");
+        List<ScriptEngineFactory> factories = manager.getEngineFactories();
+        System.err.println("---- engines ----");
+        factories.forEach(System.err::println);
+        System.err.println("----");
+        ScriptEngine engine = manager.getEngineByName("javascript");
 
         String pre = "xpath = function(path) { return java.lang.System.getProperty('java.vendor'); };";
         String expression = "xpath('/kml/Folder/Placemark/')";
@@ -84,5 +90,3 @@ System.err.println(sb);
         System.err.println(result);
     }
 }
-
-/* */

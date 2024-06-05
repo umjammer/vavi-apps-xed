@@ -67,12 +67,10 @@ public class App {
         Document document = dbf.newDocumentBuilder().parse(app.inFile);
         for (Command command : app.commands) {
             if (command != null) {
-//System.err.println(command);
+//logger.log(Level.DEBUG, command);
                 command.exec(document);
             }
         }
         new PrettyPrinter(new PrintWriter(System.out)).print(document);
     }
 }
-
-/* */

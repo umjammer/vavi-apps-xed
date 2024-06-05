@@ -6,20 +6,21 @@
 
 package vavi.apps.xed.command;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.LinkedList;
 import java.util.Queue;
-
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.klab.commons.cli.Binder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.klab.commons.cli.Binder;
-
 import vavi.apps.xed.App;
 import vavi.apps.xed.Command;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -29,6 +30,8 @@ import vavi.apps.xed.Command;
  * @version 0.00 2019/04/08 umjammer initial version <br>
  */
 public class Splitter implements Command, Binder<App> {
+
+    private static final Logger logger = getLogger(Splitter.class.getName());
 
     /** xpath for splitting nodes */
     String targetXPath;
@@ -98,7 +101,7 @@ public class Splitter implements Command, Binder<App> {
             Object nodeSet = xPath.evaluate(targetXPath, document, XPathConstants.NODESET);
 
             NodeList nodeList = (NodeList) nodeSet;
-System.err.println("nodeList: " + nodeList.getLength());
+logger.log(Level.DEBUG, "nodeList: " + nodeList.getLength());
 
             Queue<Node> nodes = new LinkedList<>();
 
@@ -137,5 +140,3 @@ outer:
         }
     }
 }
-
-/* */

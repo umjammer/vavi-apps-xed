@@ -13,18 +13,15 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.SortedMap;
 import java.util.TreeMap;
-
 import javax.xml.xpath.XPathConstants;
 import javax.xml.xpath.XPathExpressionException;
 
+import org.klab.commons.cli.Binder;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
-import org.klab.commons.cli.Binder;
-
-import vavi.apps.xed.Command;
 import vavi.apps.xed.App;
+import vavi.apps.xed.Command;
 
 
 /**
@@ -128,7 +125,7 @@ public class Sorter implements Command, Binder<App> {
             Object nodeSet = xPath.evaluate(targetXPath, document, XPathConstants.NODESET);
 
             NodeList nodeList = (NodeList) nodeSet;
-//System.err.println("nodeList: " + nodeList.getLength());
+//logger.log(Level.DEBUG, "nodeList: " + nodeList.getLength());
 
             SortedMap<String, Node> nodes = new TreeMap<>((o1, o2) -> type.compareTo(o1, o2, Sorter.this));
 
@@ -157,5 +154,3 @@ public class Sorter implements Command, Binder<App> {
         }
     }
 }
-
-/* */
